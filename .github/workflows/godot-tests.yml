@@ -1,0 +1,43 @@
+name: Godot tests
+on:
+  push:
+    paths: ["godot/**", ".github/workflows/godot-tests.yml"]
+  pull_request:
+    paths: ["godot/**", ".github/workflows/godot-tests.yml"]
+permissions:
+  contents: read
+env:
+  GODOT_VERSION: "4.7.2"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot && cd ~/godot
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && rm godot.zip && mv Godot_v* godot && chmod +x godot
+      - name: Import project
+        run: ~/godot/godot --headless --path godot --import
+      - name: Run tests (유전 규칙 + 에셋 로드)
+        run: ~/godot/godot --headless --path godot -s res://tests/run_tests.gd
+  addon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python tools/blender/build_addon.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nyang_asset_tools-blender-addon
+          path: dist/nyang_asset_tools.zip

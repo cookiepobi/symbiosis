@@ -1,0 +1,69 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="냥냥 빌리지"
+config/description="고양이 털색 유전 교배·돌봄 게임"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="disabled"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=2
+
+[shader_globals]
+
+hemi_sky={
+"type": "vec3",
+"value": Vector3(1.050000, 0.941083, 0.782674)
+}
+hemi_ground={
+"type": "vec3",
+"value": Vector3(0.728565, 0.509407, 0.344167)
+}
+dir1_dir={
+"type": "vec3",
+"value": Vector3(0.358569, 0.717137, 0.597614)
+}
+dir1_color={
+"type": "vec3",
+"value": Vector3(1.600000, 1.394187, 1.098696)
+}
+dir2_dir={
+"type": "vec3",
+"value": Vector3(-0.742781, 0.371391, 0.557086)
+}
+dir2_color={
+"type": "vec3",
+"value": Vector3(0.500000, 0.346936, 0.263558)
+}
+fog_color={
+"type": "vec3",
+"value": Vector3(0.686685, 0.871367, 0.871367)
+}
+fog_near={
+"type": "float",
+"value": 45.0
+}
+fog_far={
+"type": "float",
+"value": 95.0
+}

@@ -1,0 +1,14 @@
+# Godot 텍스트 파일 줄바꿈 고정
+*.gd text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.gdshader text eol=lf
+*.import text eol=lf
+godot/project.godot text eol=lf
+
+# 변환된 3D 에셋·텍스처는 Git LFS로 저장
+godot/assets/**/*.glb filter=lfs diff=lfs merge=lfs -text
+godot/assets/**/*.png filter=lfs diff=lfs merge=lfs -text
+godot/assets/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+godot/assets/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+godot/assets/**/*.ttf filter=lfs diff=lfs merge=lfs -text

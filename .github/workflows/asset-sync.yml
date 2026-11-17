@@ -1,0 +1,131 @@
+name: Drive asset sync
+# Google Drive 공유 폴더의 .blend/.fbx/.obj를 검사·변환해 Godot 에셋으로 PR을 만든다.
+# 필요한 저장소 Secrets: GDRIVE_SERVICE_ACCOUNT_JSON, GDRIVE_FOLDER_ID (docs/ASSET_WORKFLOW.md 참고)
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "변경 여부와 상관없이 모든 에셋을 다시 변환"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: asset-sync
+  cancel-in-progress: false
+env:
+  BLENDER_VERSION: "5.3.0"
+  GODOT_VERSION: "4.7.2"
+  PYTHONIOENCODING: utf-8
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check configuration
+        id: cfg
+        env:
+          SA: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          FOLDER: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          if [ -z "$SA" ] || [ -z "$FOLDER" ]; then
+            echo "::notice::Drive 연동 Secrets가 아직 없습니다. docs/ASSET_WORKFLOW.md의 관리자 설정을 먼저 해 주세요."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.ok == 'true'
+        with:
+          lfs: true
+
+      - name: Restore Drive download cache
+        if: steps.cfg.outputs.ok == 'true'
+        uses: actions/cache@v4
+        with:
+          path: drive_src
+          key: drive-src-${{ github.run_id }}
+          restore-keys: drive-src-
+
+      - name: Download from Google Drive (읽기 전용)
+        if: steps.cfg.outputs.ok == 'true'
+        env:
+          SA: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          FOLDER: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq rclone
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          rclone sync :drive: drive_src \
+            --drive-service-account-file "$RUNNER_TEMP/sa.json" \
+            --drive-root-folder-id "$FOLDER" \
+            --drive-scope drive.readonly \
+            --include "*.{blend,fbx,obj,mtl,glb,gltf,bin,png,jpg,jpeg,tga}" \
+            --exclude "*.blend1" --stats-one-line -v
+          rm "$RUNNER_TEMP/sa.json"
+
+      - name: Detect changes
+        id: changes
+        if: steps.cfg.outputs.ok == 'true'
+        run: python tools/sync/detect_changes.py drive_src godot/assets/models/manifest.json
+
+      - name: Cache Blender
+        id: blender-cache
+        if: steps.cfg.outputs.ok == 'true' && (steps.changes.outputs.changed != '0' || inputs.force)
+        uses: actions/cache@v4
+        with:
+          path: ~/blender
+          key: blender-${{ env.BLENDER_VERSION }}
+
+      - name: Download Blender
+        if: steps.cfg.outputs.ok == 'true' && (steps.changes.outputs.changed != '0' || inputs.force) && steps.blender-cache.outputs.cache-hit != 'true'
+        run: |
+          MINOR="${BLENDER_VERSION%.*}"
+          mkdir -p ~/blender
+          curl -fsSL "https://download.blender.org/release/Blender${MINOR}/blender-${BLENDER_VERSION}-linux-x64.tar.xz" \
+            | tar -xJ -C ~/blender --strip-components=1
+
+      - name: Validate and convert (Blender)
+        if: steps.cfg.outputs.ok == 'true' && (steps.changes.outputs.changed != '0' || inputs.force)
+        run: |
+          sudo apt-get install -y -qq libxi6 libxkbcommon0 libxxf86vm1 libxfixes3 libxrender1 libgl1 libsm6 >/dev/null
+          ~/blender/blender -b --factory-startup -P tools/blender/convert_assets.py -- \
+            --src drive_src --out godot/assets/models \
+            --rules godot/assets/asset_rules.json --report asset-report.md \
+            ${{ inputs.force && '--force' || '' }}
+          cat asset-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cache Godot
+        id: godot-cache
+        if: steps.cfg.outputs.ok == 'true' && (steps.changes.outputs.changed != '0' || inputs.force)
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}
+
+      - name: Download Godot
+        if: steps.cfg.outputs.ok == 'true' && (steps.changes.outputs.changed != '0' || inputs.force) && steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot && cd ~/godot
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && rm godot.zip && mv Godot_v* godot && chmod +x godot
+
+      - name: Import into Godot and test
+        if: steps.cfg.outputs.ok == 'true' && (steps.changes.outputs.changed != '0' || inputs.force)
+        run: |
+          ~/godot/godot --headless --path godot --import
+          ~/godot/godot --headless --path godot -s res://tests/run_tests.gd
+
+      - name: Open pull request
+        if: steps.cfg.outputs.ok == 'true' && (steps.changes.outputs.changed != '0' || inputs.force)
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: assets/drive-sync
+          title: "에셋 동기화: Google Drive → Godot"
+          commit-message: "Sync assets from Google Drive"
+          body-path: asset-report.md
+          add-paths: |
+            godot/assets/models/**
