@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "notes": "1 unit = 1 m. 기준 크기는 웹 프로토타입(world.js, cat3d.js)의 비율을 집사 키 1.7 m에 맞춰 0.7배로 환산한 값. 이 파일 하나만 고치면 Blender 애드온·변환기·Godot 미리보기가 모두 따라간다.",
+  "references": {
+    "caretaker": { "label": "Caretaker", "height": 1.7, "width": 0.5, "depth": 0.35 },
+    "cat_adult": { "label": "Cat adult", "height": 0.6, "width": 0.3, "depth": 0.75 },
+    "kitten": { "label": "Kitten", "height": 0.37, "width": 0.19, "depth": 0.47 },
+    "fence": { "label": "Fence", "height": 0.77, "width": 1.5, "depth": 0.08 },
+    "door": { "label": "Door", "height": 1.54, "width": 1.0, "depth": 0.1 }
+  },
+  "categories": {
+    "cat": {
+      "label": "고양이 본체",
+      "height": [0.45, 0.8],
+      "max_tris": 15000,
+      "expect_armature": true
+    },
+    "costume": {
+      "label": "스페셜 의상",
+      "height": [0.03, 0.6],
+      "max_tris": 5000,
+      "expect_armature": false
+    },
+    "prop": {
+      "label": "소품 (밥그릇, 장난감, 방석 등)",
+      "height": [0.03, 1.5],
+      "max_tris": 6000,
+      "expect_armature": false
+    },
+    "furniture": {
+      "label": "가구·쉼터·캣타워",
+      "height": [0.2, 2.5],
+      "max_tris": 12000,
+      "expect_armature": false
+    },
+    "building": {
+      "label": "건물",
+      "height": [2.0, 8.0],
+      "max_tris": 30000,
+      "expect_armature": false
+    },
+    "nature": {
+      "label": "나무·풀·바위",
+      "height": [0.05, 9.0],
+      "max_tris": 10000,
+      "expect_armature": false
+    },
+    "character": {
+      "label": "집사·이웃 NPC",
+      "height": [1.4, 2.0],
+      "max_tris": 20000,
+      "expect_armature": true
+    }
+  },
+  "origin_tolerance_m": 0.02
+}

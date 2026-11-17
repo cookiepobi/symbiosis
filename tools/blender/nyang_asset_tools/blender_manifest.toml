@@ -1,0 +1,11 @@
+schema_version = "1.0.0"
+
+id = "nyang_asset_tools"
+version = "0.1.0"
+name = "Nyang Village Asset Tools"
+tagline = "Compare asset size with in-game references and check export rules"
+maintainer = "Nyang Village team"
+type = "add-on"
+
+blender_version_min = "4.2.0"
+license = ["SPDX:GPL-3.0-or-later"]

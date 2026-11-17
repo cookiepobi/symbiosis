@@ -1,0 +1,136 @@
+{
+  "building/tower.blend": {
+    "source": "building/tower.blend",
+    "sha256": "f23a1a8e6f11cecd0de612aaf7605b166932d7b8b0eabc2a58b9f4d0dd94e674",
+    "category": "building",
+    "output": null,
+    "checked_at": "2026-11-16T16:37:55+00:00",
+    "dimensions": [
+      4.0,
+      4.0,
+      12.0
+    ],
+    "tris": 12,
+    "armatures": [],
+    "shape_keys": [],
+    "actions": [],
+    "issues": [
+      {
+        "level": "error",
+        "code": "height",
+        "message": "높이 12.00 m가 'building' 허용 범위 2.00–8.00 m를 벗어났습니다."
+      }
+    ],
+    "status": "rejected"
+  },
+  "cat/cat_base.blend": {
+    "source": "cat/cat_base.blend",
+    "sha256": "71359d0eb6bc8141164110ef5c4b6ffce874c717ccdb3909e529cf4354e91535",
+    "category": "cat",
+    "output": "cat/cat_base.glb",
+    "checked_at": "2026-11-16T16:37:55+00:00",
+    "dimensions": [
+      0.39,
+      0.72,
+      0.6
+    ],
+    "tris": 960,
+    "armatures": [
+      "Armature"
+    ],
+    "shape_keys": [
+      "body_chubby"
+    ],
+    "actions": [
+      "idle"
+    ],
+    "issues": [
+      {
+        "level": "warning",
+        "code": "floor",
+        "message": "에셋 바닥이 Z=0이 아닙니다 (+0.300 m). 게임에서 떠 있거나 묻혀 보입니다."
+      },
+      {
+        "level": "info",
+        "code": "modifiers_with_shapekeys",
+        "message": "Shape key와 모디파이어가 같이 있어 내보낼 때 모디파이어를 적용하지 않습니다. Subdivision 등은 미리 적용하거나 Armature만 남겨 주세요."
+      }
+    ],
+    "status": "converted"
+  },
+  "nature/bush.obj": {
+    "source": "nature/bush.obj",
+    "sha256": "537594b22316dfb0c0f2cde6a878b29bf030168637d3d9040897feb261584b53",
+    "category": "nature",
+    "output": "nature/bush.glb",
+    "checked_at": "2026-11-16T16:37:56+00:00",
+    "dimensions": [
+      0.8,
+      0.8,
+      1.0
+    ],
+    "tris": 62,
+    "armatures": [],
+    "shape_keys": [],
+    "actions": [],
+    "issues": [],
+    "status": "converted"
+  },
+  "nature/rock.fbx": {
+    "source": "nature/rock.fbx",
+    "sha256": "ad27efec87471639dd5e4da8a7c4f68f87e958268a4a4ec134b48ebea1d5d48a",
+    "category": "nature",
+    "output": "nature/rock.glb",
+    "checked_at": "2026-11-16T16:37:56+00:00",
+    "dimensions": [
+      0.8,
+      0.8,
+      1.0
+    ],
+    "tris": 62,
+    "armatures": [],
+    "shape_keys": [],
+    "actions": [],
+    "issues": [],
+    "status": "converted"
+  },
+  "prop/Food Bowl.blend": {
+    "source": "prop/Food Bowl.blend",
+    "sha256": "2d6725d50b6d5b163756ed1839ec3081701f202a9b082062e1b2c519c59aae76",
+    "category": "prop",
+    "output": "prop/food_bowl.glb",
+    "checked_at": "2026-11-16T16:37:56+00:00",
+    "dimensions": [
+      0.4,
+      0.4,
+      0.15
+    ],
+    "tris": 124,
+    "armatures": [],
+    "shape_keys": [],
+    "actions": [],
+    "issues": [
+      {
+        "level": "warning",
+        "code": "floor",
+        "message": "에셋 바닥이 Z=0이 아닙니다 (+0.525 m). 게임에서 떠 있거나 묻혀 보입니다."
+      },
+      {
+        "level": "warning",
+        "code": "center",
+        "message": "에셋이 원점 중앙에서 벗어나 있습니다 (X +0.30, Y +0.00)."
+      },
+      {
+        "level": "warning",
+        "code": "scale",
+        "message": "스케일이 적용되지 않은 오브젝트: Cylinder (Ctrl+A → Scale)"
+      },
+      {
+        "level": "warning",
+        "code": "shader_nodes",
+        "message": "머티리얼 'bowl'의 노드 TexNoise, ValToRGB는 게임으로 넘어가지 않습니다 (텍스처로 Bake하거나 게임 셰이더로 다시 구현 필요)."
+      }
+    ],
+    "status": "converted"
+  }
+}

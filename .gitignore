@@ -3,3 +3,12 @@ __pycache__/
 .claude/
 node_modules/
 test-results/
+
+# Godot
+godot/.godot/
+godot/export/
+# Asset pipeline (Drive 원본은 저장소에 넣지 않음)
+drive_src/
+dist/
+tools/blender/nyang_asset_tools/asset_rules.json
+asset-report.md

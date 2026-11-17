@@ -10,6 +10,11 @@
 플레이: https://nogarinogarsia.github.io/symbiosis/ (PC 브라우저, 인터넷 연결 필요)
 기획 요약 문서: [GAME_OVERVIEW.md](GAME_OVERVIEW.md)
 
+> **Godot 전환 진행 중** — `godot/` 폴더에서 Godot 4.7로 단계적으로 옮기고 있습니다. 아래 명세는 웹 프로토타입 기준입니다.
+> - 전환 계획·유전 규칙(고양이 유전 가이드 기준): [docs/GODOT_MIGRATION.md](docs/GODOT_MIGRATION.md)
+> - 팀원 에셋(.blend/.fbx/.obj) 업로드·크기 확인: [docs/ASSET_WORKFLOW.md](docs/ASSET_WORKFLOW.md)
+> - 셰이더 참고: [docs/SHADER_NOTES.md](docs/SHADER_NOTES.md)
+
 ## 실행
 
 빌드 도구 없이 동작합니다(Node 불필요). Three.js는 CDN(jsdelivr)에서 불러옵니다.
