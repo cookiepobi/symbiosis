@@ -2,7 +2,7 @@
 
 ## ✅ 넘기기 전 체크리스트 (셰이더 · 리깅 · 애니메이션 · 쉐입키)
 
-웹(Three.js)이든 Godot이든 Blender 작업물은 **glTF(.glb) 하나로만** 게임에 들어갑니다(Actions가 Blender 5.2로 변환). 아래 규칙은 두 엔진에 거의 똑같이 적용됩니다.
+웹(Three.js)이든 Godot이든 Blender 작업물은 **glTF(.glb) 하나로만** 게임에 들어갑니다(Actions가 Blender 5.3으로 변환). 아래 규칙은 두 엔진에 거의 똑같이 적용됩니다.
 
 ### 1. 셰이더·재질
 - **넘어감:** Principled BSDF 값(Base Color·Roughness·Metallic·Normal·Emission·Alpha) + 연결된 **이미지 텍스처**, 버텍스 컬러
@@ -64,7 +64,7 @@
 크기는 올리기 전에 **Blender 안에서** 게임 기준 모형과 바로 비교할 수 있습니다.
 
 ```
-[Blender 5.2]  냥냥 에셋 패널: 기준 모형과 크기 비교 → 검사 → 고치기
+[Blender 5.3]  냥냥 에셋 패널: 기준 모형과 크기 비교 → 검사 → 고치기
       │ 저장 (텍스처 Pack)
       ▼
 [Google Drive]  공유 폴더/<카테고리>/<이름>.blend        ← 팀원이 하는 일은 여기까지
@@ -85,7 +85,7 @@
 
 ## 1. 팀원: 처음 한 번만
 
-1. **Blender 5.2** 설치 (자동 변환기도 5.2.1로 변환합니다. 더 높은 버전에서 저장한 파일은 열리지 않을 수 있습니다.)
+1. **Blender 5.3** 설치 (자동 변환기도 5.3.0으로 변환합니다. 더 높은 버전에서 저장한 파일은 열리지 않을 수 있습니다.)
 2. **애드온 설치**
    - zip 받기: GitHub → Actions → *Godot tests* 최근 실행 → Artifacts의 `nyang_asset_tools-blender-addon` (또는 담당자가 `python tools/blender/build_addon.py`로 만든 `dist/nyang_asset_tools.zip`)
    - Blender → Edit → Preferences → Get Extensions → 오른쪽 위 ∨ → **Install from Disk…** → zip 선택
@@ -190,7 +190,7 @@ GitHub Actions가 Drive를 **읽기 전용**으로 볼 수 있도록 Google Clou
 ## 7. 로컬에서 직접 변환해 보기 (담당자용)
 
 ```bash
-"C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup -P tools/blender/convert_assets.py -- --src <Drive 폴더를 받은 경로> --out godot/assets/models --rules godot/assets/asset_rules.json --report asset-report.md
+"C:/Program Files/Blender Foundation/Blender 5.3/blender.exe" -b --factory-startup -P tools/blender/convert_assets.py -- --src <Drive 폴더를 받은 경로> --out godot/assets/models --rules godot/assets/asset_rules.json --report asset-report.md
 ```
 
 Google Drive for Desktop을 쓰면 `--src`에 `G:/내 드라이브/...` 같은 로컬 경로를 그대로 넣을 수 있습니다.

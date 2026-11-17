@@ -1,6 +1,6 @@
 """Drive에서 내려받은 원본(.blend/.fbx/.obj/.gltf)을 검사하고 Godot용 .glb로 변환한다.
 
-실행 (Blender 5.2):
+실행 (Blender 5.3):
   blender -b --factory-startup -P tools/blender/convert_assets.py -- \
       --src drive_src --out godot/assets/models \
       --rules godot/assets/asset_rules.json --report asset-report.md [--force]
