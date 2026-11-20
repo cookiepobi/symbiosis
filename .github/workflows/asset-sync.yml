@@ -59,13 +59,35 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq rclone
           printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
-          rclone sync :drive: drive_src \
-            --drive-service-account-file "$RUNNER_TEMP/sa.json" \
-            --drive-root-folder-id "$FOLDER" \
-            --drive-scope drive.readonly \
-            --include "*.{blend,fbx,obj,mtl,glb,gltf,bin,png,jpg,jpeg,tga}" \
-            --exclude "*.blend1" --stats-one-line -v
-          rm "$RUNNER_TEMP/sa.json"
+          trap 'rm -f "$RUNNER_TEMP/sa.json"' EXIT
+          # Secret 값 점검 (값 자체는 출력하지 않음)
+          python3 - "$RUNNER_TEMP/sa.json" <<'PY'
+          import json, sys
+          try:
+              d = json.load(open(sys.argv[1], encoding="utf-8"))
+          except Exception as e:
+              print(f"::error::GDRIVE_SERVICE_ACCOUNT_JSON이 올바른 JSON이 아닙니다 ({e.__class__.__name__}). 키 파일 내용 전체를 {{ 부터 }} 까지 그대로 붙여 넣어 주세요.")
+              sys.exit(1)
+          if d.get("type") != "service_account" or "private_key" not in d:
+              print("::error::GDRIVE_SERVICE_ACCOUNT_JSON이 서비스 계정 키가 아닙니다. IAM → Service Accounts → Keys → Add key → JSON 으로 받은 파일을 넣어 주세요.")
+              sys.exit(1)
+          print("서비스 계정:", d.get("client_email"))
+          PY
+          FOLDER="$(printf '%s' "$FOLDER" | tr -d '[:space:]')"
+          case "$FOLDER" in
+            *drive.google.com*|*/*|*\?*) echo "::error::GDRIVE_FOLDER_ID에는 주소 전체가 아니라 folders/ 뒤의 ID만 넣어 주세요."; exit 1 ;;
+          esac
+          RC=(--drive-service-account-file "$RUNNER_TEMP/sa.json" --drive-root-folder-id "$FOLDER" --drive-scope drive.readonly)
+          if ! rclone lsf :drive: "${RC[@]}" --max-depth 1 > /dev/null; then
+            echo "::error::Drive 폴더를 읽지 못했습니다. ① Google Cloud에서 Google Drive API 사용 설정 ② 공유 폴더를 위 서비스 계정 이메일에 뷰어로 공유 ③ 폴더 ID 를 확인해 주세요."
+            exit 1
+          fi
+          # --include와 --exclude를 함께 쓰면 rclone이 오류로 멈추므로 --filter 한 가지로 지정
+          rclone sync :drive: drive_src "${RC[@]}" \
+            --filter "- *.blend1" \
+            --filter "+ *.{blend,fbx,obj,mtl,glb,gltf,bin,png,jpg,jpeg,tga}" \
+            --filter "- *" \
+            --stats-one-line -v
 
       - name: Detect changes
         id: changes
