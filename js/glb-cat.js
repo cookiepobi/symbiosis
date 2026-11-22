@@ -69,7 +69,7 @@ const isLoop = name => /_loop$/.test(name);
  * @param cat    게임의 고양이 데이터 (참고용)
  * @param opts   { scale: GLB 크기에 곱할 배율, height: 원하는 높이(scale 대신),
  *                 body: 체형 -1~1 (음수 홀쭉, 양수 뚱냥), walkSpeed: 숫자 또는 () => 숫자,
- *                 convertMaterial: (원래재질) => 새 재질, eyes: { open, closed: Texture } }
+ *                 convertMaterial: (원래재질, 메시) => 새 재질, eyes: { open, closed: Texture } }
  */
 export function buildGlbCat(gltf, cat = {}, opts = {}) {
   const root = new THREE.Group();
@@ -97,7 +97,7 @@ export function buildGlbCat(gltf, cat = {}, opts = {}) {
       if (!o.isMesh) return;
       const conv = m => {
         if (!m) return m;
-        const n = opts.convertMaterial(m);
+        const n = opts.convertMaterial(m, o);
         n.name = m.name;
         ownMaterials.add(n);
         return n;

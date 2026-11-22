@@ -8,11 +8,13 @@
 //   bodyrand  1이면 고양이마다 체형을 다르게 (기본 1, 0이면 모두 같은 체형)
 //   walk      걷기 애니메이션 재생 속도 배율
 //   mat       pbr이면 GLB 원래 재질로 봄 (비교용, 기본은 팀 웹과 같은 툰 재질)
+//   coat      0이면 원래 게임 털색·무늬를 끄고 흰 고양이(GLB 텍스처 그대로)로 봄 (기본 1)
 
 export * from './cat3d.js?orig';
 import * as THREE from 'three';
 import { buildCat as buildProcedural, disposeCat as disposeProcedural, toon } from './cat3d.js?orig';
 import { loadCatGlb, buildGlbCat, disposeGlbCat } from './glb-cat.js';
+import { applyCoat } from './glb-coat.js';
 
 const params = new URLSearchParams(location.search);
 const GLB_URL = params.get('glb') || './cat_deploy.glb';
@@ -24,9 +26,10 @@ export const BODY_MIN = -0.70;
 export const BODY_MAX = 0.75;
 
 const MATERIAL_MODE = params.get('mat') || 'toon';
+const USE_COAT = params.get('coat') !== '0';
 
-/** 팀 웹 고양이와 같은 룩: 털 = toon()(4단계 툰), 얼굴(eye) = 조명 없는 MeshBasicMaterial */
-function toTeamMaterial(m) {
+/** 팀 웹 고양이와 같은 룩: 털 = toon()(4단계 툰) + 원래 게임 털색·무늬, 얼굴(eye) = 조명 없는 MeshBasicMaterial */
+function toTeamMaterial(m, mesh, cat) {
   const common = {
     map: m.map || null,
     transparent: m.transparent,
@@ -34,7 +37,9 @@ function toTeamMaterial(m) {
     side: m.side,
   };
   if (/eye/i.test(m.name)) return new THREE.MeshBasicMaterial({ ...common, color: 0xffffff });
-  return toon(m.map ? 0xffffff : m.color.getHex(), common);
+  const t = toon(m.map ? 0xffffff : m.color.getHex(), common);
+  if (USE_COAT && mesh?.isSkinnedMesh && /coat/i.test(m.name)) applyCoat(THREE, t, mesh, cat);
+  return t;
 }
 
 const clampBody = v => Math.min(BODY_MAX, Math.max(BODY_MIN, Number(v) || 0));
@@ -42,6 +47,7 @@ const clampBody = v => Math.min(BODY_MAX, Math.max(BODY_MIN, Number(v) || 0));
 export const glbSettings = {
   url: GLB_URL,
   material: MATERIAL_MODE,
+  coat: USE_COAT,
   body: clampBody(params.get('body') ?? 0),
   bodyRandom: params.get('bodyrand') !== '0',
   walkSpeed: Number(params.get('walk') ?? 1),
@@ -82,7 +88,7 @@ export function buildCat(cat, opts = {}) {
     scale: 1 / (METRES_PER_UNIT * CAT_SCALE),
     body,
     walkSpeed: () => glbSettings.walkSpeed,
-    convertMaterial: MATERIAL_MODE === 'pbr' ? null : toTeamMaterial,
+    convertMaterial: MATERIAL_MODE === 'pbr' ? null : (m, mesh) => toTeamMaterial(m, mesh, cat),
   });
   root.userData.body = body;
   live.add(root);
