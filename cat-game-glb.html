@@ -8,16 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css?v=fixed-pen-button">
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","./js/cat3d.js":"./js/cat3d-glb.js?v=coat1","./js/ui.js":"./js/ui.js?v=capacity-2","./js/world.js":"./js/world.js?v=capacity-2","./js/game.js":"./js/game.js?v=capacity-2","./js/params.js":"./js/params.js?v=capacity-2","./js/next-step.js":"./js/next-step.js?v=capacity-2"}}</script>
-<style>
-  #glbTest{position:fixed;left:12px;bottom:12px;z-index:50;background:#fffaf0ee;border:2px solid #e8d6b8;border-radius:14px;
-    padding:10px 12px;font:13px/1.45 system-ui,sans-serif;color:#5a4632;min-width:230px;box-shadow:0 4px 14px #0002}
-  #glbTest b{font-family:Jua,system-ui;font-weight:400;font-size:15px}
-  #glbTest label{display:flex;align-items:center;gap:8px;margin-top:6px}
-  #glbTest input[type=range]{flex:1}
-  #glbTest .err{color:#c0392b}
-  #glbTest small{color:#8a7560}
-</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","./js/cat3d.js":"./js/cat3d-glb.js?v=coat2","./js/ui.js":"./js/ui.js?v=capacity-2","./js/world.js":"./js/world.js?v=capacity-2","./js/game.js":"./js/game.js?v=capacity-2","./js/params.js":"./js/params.js?v=capacity-2","./js/next-step.js":"./js/next-step.js?v=capacity-2"}}</script>
 </head>
 <body>
 <canvas id="world"></canvas>
@@ -50,35 +41,6 @@
 <div id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
 <div id="modal" hidden></div>
 <input type="file" id="saveFile" accept="application/json,.json" hidden>
-<div id="glbTest">
-  <b>🐈 GLB 고양이 테스트</b>
-  <div id="glbStatus">불러오는 중…</div>
-  <label>체형 <small>홀쭉</small><input id="glbBody" type="range" min="-0.70" max="0.75" step="0.01" value="0"><small>뚱냥</small><span id="glbBodyVal">랜덤</span></label>
-  <button id="glbBodyRand" type="button" style="margin-top:4px;font:12px system-ui;border:1px solid #e8d6b8;background:#fff;border-radius:8px;padding:2px 8px;cursor:pointer">고양이마다 다른 체형</button>
-  <label>걷기 속도 <input id="glbWalk" type="range" min="0.25" max="2" step="0.05" value="1"><span id="glbWalkVal">1.00×</span></label>
-  <small>주소 옵션: ?glb=파일.glb · &amp;mat=pbr(원래 재질 비교) · &amp;coat=0(흰 고양이) · &amp;bodyrand=0</small>
-</div>
-<script type="module">
-  import { glbSettings, setAllBody, resetRandomBody, setWalkSpeed, liveGlbCats } from './js/cat3d.js'; // importmap이 cat3d-glb.js로 연결
-  const $ = id => document.getElementById(id);
-  const status = $('glbStatus');
-  if (glbSettings.loaded) {
-    status.innerHTML = `파일 ${glbSettings.url}<br><small>동작 ${glbSettings.clips.length}개 · 셰이프 키 ${glbSettings.morphs.join(', ') || '없음'}</small>`;
-  } else {
-    status.innerHTML = `<span class="err">GLB를 불러오지 못해 기존 고양이로 표시 중</span><br><small>${glbSettings.error}</small>`;
-  }
-  const body = $('glbBody'), walk = $('glbWalk');
-  body.value = glbSettings.body; walk.value = glbSettings.walkSpeed;
-  const show = () => {
-    $('glbBodyVal').textContent = glbSettings.bodyRandom ? '랜덤' : Number(body.value).toFixed(2);
-    $('glbWalkVal').textContent = Number(walk.value).toFixed(2) + '×';
-  };
-  body.oninput = () => { setAllBody(Number(body.value)); show(); };
-  $('glbBodyRand').onclick = () => { resetRandomBody(); show(); };
-  walk.oninput = () => { setWalkSpeed(Number(walk.value)); show(); };
-  show();
-  window.glbCats = liveGlbCats; // 개발자 도구에서 확인용: [...glbCats].map(r => r.userData.state())
-</script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

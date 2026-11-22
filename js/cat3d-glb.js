@@ -6,7 +6,7 @@
 //   glb       불러올 GLB (기본 ./cat_deploy.glb)
 //   body      체형 시작값 -0.70(홀쭉) ~ 0 ~ 0.75(뚱냥)
 //   bodyrand  1이면 고양이마다 체형을 다르게 (기본 1, 0이면 모두 같은 체형)
-//   walk      걷기 애니메이션 재생 속도 배율
+//   walk      걷기 애니메이션 재생 속도 배율 (기본 1.3)
 //   mat       pbr이면 GLB 원래 재질로 봄 (비교용, 기본은 팀 웹과 같은 툰 재질)
 //   coat      0이면 원래 게임 털색·무늬를 끄고 흰 고양이(GLB 텍스처 그대로)로 봄 (기본 1)
 
@@ -50,7 +50,7 @@ export const glbSettings = {
   coat: USE_COAT,
   body: clampBody(params.get('body') ?? 0),
   bodyRandom: params.get('bodyrand') !== '0',
-  walkSpeed: Number(params.get('walk') ?? 1),
+  walkSpeed: Number(params.get('walk') ?? 1.3),
   loaded: false,
   clips: [],
   morphs: [],
