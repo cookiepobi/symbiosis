@@ -78,8 +78,19 @@ jobs:
             *drive.google.com*|*/*|*\?*) echo "::error::GDRIVE_FOLDER_ID에는 주소 전체가 아니라 folders/ 뒤의 ID만 넣어 주세요."; exit 1 ;;
           esac
           RC=(--drive-service-account-file "$RUNNER_TEMP/sa.json" --drive-root-folder-id "$FOLDER" --drive-scope drive.readonly)
-          if ! rclone lsf :drive: "${RC[@]}" --max-depth 1 > /dev/null; then
-            echo "::error::Drive 폴더를 읽지 못했습니다. ① Google Cloud에서 Google Drive API 사용 설정 ② 공유 폴더를 위 서비스 계정 이메일에 뷰어로 공유 ③ 폴더 ID 를 확인해 주세요."
+          if ! rclone lsf :drive: "${RC[@]}" --max-depth 1 --low-level-retries 1 --retries 1 > /dev/null 2> "$RUNNER_TEMP/rc.err"; then
+            ERR="$(grep -m1 -oE 'Error [0-9]{3}[^,]*|accessNotConfigured|SERVICE_DISABLED|notFound|File not found[^"]*|directory not found|invalid_grant[^"]*' "$RUNNER_TEMP/rc.err" || tail -n1 "$RUNNER_TEMP/rc.err")"
+            case "$(cat "$RUNNER_TEMP/rc.err")" in
+              *accessNotConfigured*|*SERVICE_DISABLED*|*"has not been used in project"*)
+                HINT="Google Cloud 프로젝트에서 Google Drive API가 꺼져 있습니다. APIs & Services → Library → Google Drive API → Enable (켠 뒤 몇 분 기다렸다 다시 실행)" ;;
+              *notFound*|*"File not found"*|*"directory not found"*|*"Error 404"*)
+                HINT="폴더를 찾지 못했습니다. 공유 폴더를 위 서비스 계정 이메일에 뷰어로 공유했는지, GDRIVE_FOLDER_ID가 맞는지 확인해 주세요" ;;
+              *invalid_grant*|*"Invalid JWT"*|*"account not found"*)
+                HINT="서비스 계정 키가 유효하지 않습니다(삭제된 키·계정). 새 JSON 키를 받아 Secret을 다시 넣어 주세요" ;;
+              *)
+                HINT="① Google Drive API 사용 설정 ② 폴더를 서비스 계정 이메일에 뷰어로 공유 ③ 폴더 ID 를 확인해 주세요" ;;
+            esac
+            echo "::error::Drive 폴더를 읽지 못했습니다. $HINT [rclone: ${ERR:0:300}]"
             exit 1
           fi
           # --include와 --exclude를 함께 쓰면 rclone이 오류로 멈추므로 --filter 한 가지로 지정
