@@ -1,0 +1,356 @@
+{
+ "version": 1,
+ "assets": [
+  {
+   "id": "cream_cat_round_plinth",
+   "name": "크림 고양이 동상",
+   "category": "prop",
+   "file": "cream_cat_round_plinth.glb",
+   "thumb": null,
+   "size": [
+    0.645,
+    0.645,
+    0.75
+   ],
+   "bbox": {
+    "min": [
+     -0.322,
+     0.0,
+     -0.322
+    ],
+    "max": [
+     0.322,
+     0.75,
+     0.322
+    ]
+   },
+   "tris": 5830,
+   "collider": "solid",
+   "bytes": 132964
+  },
+  {
+   "id": "cream_round_fence",
+   "name": "크림 울타리",
+   "category": "furniture",
+   "file": "cream_round_fence.glb",
+   "thumb": null,
+   "size": [
+    1.5,
+    0.18,
+    0.77
+   ],
+   "bbox": {
+    "min": [
+     -0.75,
+     0.0,
+     -0.09
+    ],
+    "max": [
+     0.75,
+     0.77,
+     0.09
+    ]
+   },
+   "tris": 1276,
+   "collider": "solid",
+   "bytes": 51676
+  },
+  {
+   "id": "honey_garden_bench",
+   "name": "꿀색 정원 벤치",
+   "category": "furniture",
+   "file": "honey_garden_bench.glb",
+   "thumb": null,
+   "size": [
+    1.213,
+    0.579,
+    0.85
+   ],
+   "bbox": {
+    "min": [
+     -0.606,
+     0.0,
+     -0.289
+    ],
+    "max": [
+     0.606,
+     0.85,
+     0.289
+    ]
+   },
+   "tris": 1692,
+   "collider": "solid",
+   "bytes": 235536
+  },
+  {
+   "id": "honey_lantern_post",
+   "name": "꿀색 가로등",
+   "category": "furniture",
+   "file": "honey_lantern_post.glb",
+   "thumb": null,
+   "size": [
+    0.52,
+    0.52,
+    2.0
+   ],
+   "bbox": {
+    "min": [
+     -0.26,
+     0.0,
+     -0.26
+    ],
+    "max": [
+     0.26,
+     2.0,
+     0.26
+    ]
+   },
+   "tris": 3332,
+   "collider": "solid",
+   "bytes": 123664
+  },
+  {
+   "id": "lime_cloud_bush",
+   "name": "연두 구름 덤불",
+   "category": "nature",
+   "file": "lime_cloud_bush.glb",
+   "thumb": null,
+   "size": [
+    1.091,
+    0.669,
+    0.65
+   ],
+   "bbox": {
+    "min": [
+     -0.545,
+     0.0,
+     -0.334
+    ],
+    "max": [
+     0.545,
+     0.65,
+     0.334
+    ]
+   },
+   "tris": 4000,
+   "collider": "none",
+   "bytes": 73156
+  },
+  {
+   "id": "lime_leaf_clump",
+   "name": "연두 풀",
+   "category": "nature",
+   "file": "lime_leaf_clump.glb",
+   "thumb": null,
+   "size": [
+    0.68,
+    0.159,
+    0.55
+   ],
+   "bbox": {
+    "min": [
+     -0.34,
+     0.0,
+     -0.079
+    ],
+    "max": [
+     0.34,
+     0.55,
+     0.079
+    ]
+   },
+   "tris": 1780,
+   "collider": "none",
+   "bytes": 27004
+  },
+  {
+   "id": "lime_round_tree",
+   "name": "연두 둥근 나무",
+   "category": "nature",
+   "file": "lime_round_tree.glb",
+   "thumb": null,
+   "size": [
+    1.574,
+    1.065,
+    2.4
+   ],
+   "bbox": {
+    "min": [
+     -0.787,
+     0.0,
+     -0.533
+    ],
+    "max": [
+     0.787,
+     2.4,
+     0.533
+    ]
+   },
+   "tris": 6200,
+   "collider": "trunk",
+   "bytes": 275520
+  },
+  {
+   "id": "olive_tile_cat_shelter",
+   "name": "올리브 고양이 쉼터",
+   "category": "furniture",
+   "file": "olive_tile_cat_shelter.glb",
+   "thumb": null,
+   "size": [
+    1.181,
+    1.351,
+    1.1
+   ],
+   "bbox": {
+    "min": [
+     -0.59,
+     0.0,
+     -0.676
+    ],
+    "max": [
+     0.59,
+     1.1,
+     0.676
+    ]
+   },
+   "tris": 11744,
+   "collider": "solid",
+   "bytes": 637836
+  },
+  {
+   "id": "olive_tile_cat_shelter_x1.5",
+   "name": "올리브 고양이 쉼터 (1.5배)",
+   "category": "furniture",
+   "file": "olive_tile_cat_shelter_x1.5.glb",
+   "thumb": null,
+   "size": [
+    1.771,
+    2.027,
+    1.65
+   ],
+   "bbox": {
+    "min": [
+     -0.885,
+     0.0,
+     -1.013
+    ],
+    "max": [
+     0.885,
+     1.65,
+     1.013
+    ]
+   },
+   "tris": 11744,
+   "collider": "solid",
+   "bytes": 637760
+  },
+  {
+   "id": "olive_tile_open_house",
+   "name": "올리브 기와 집",
+   "category": "building",
+   "file": "olive_tile_open_house.glb",
+   "thumb": null,
+   "size": [
+    2.55,
+    2.868,
+    2.4
+   ],
+   "bbox": {
+    "min": [
+     -1.275,
+     0.0,
+     -1.434
+    ],
+    "max": [
+     1.275,
+     2.4,
+     1.434
+    ]
+   },
+   "tris": 22016,
+   "collider": "solid",
+   "bytes": 916328
+  },
+  {
+   "id": "pastel_flower_bush",
+   "name": "파스텔 꽃덤불",
+   "category": "nature",
+   "file": "pastel_flower_bush.glb",
+   "thumb": null,
+   "size": [
+    1.631,
+    1.036,
+    0.85
+   ],
+   "bbox": {
+    "min": [
+     -0.815,
+     0.0,
+     -0.518
+    ],
+    "max": [
+     0.815,
+     0.85,
+     0.518
+    ]
+   },
+   "tris": 9824,
+   "collider": "none",
+   "bytes": 245560
+  },
+  {
+   "id": "pink_blossom_tree",
+   "name": "분홍 꽃나무",
+   "category": "nature",
+   "file": "pink_blossom_tree.glb",
+   "thumb": null,
+   "size": [
+    1.717,
+    1.113,
+    2.4
+   ],
+   "bbox": {
+    "min": [
+     -0.858,
+     0.0,
+     -0.556
+    ],
+    "max": [
+     0.858,
+     2.4,
+     0.556
+    ]
+   },
+   "tris": 9804,
+   "collider": "trunk",
+   "bytes": 401968
+  },
+  {
+   "id": "sand_round_step",
+   "name": "모래 디딤돌",
+   "category": "nature",
+   "file": "sand_round_step.glb",
+   "thumb": null,
+   "size": [
+    0.81,
+    0.81,
+    0.08
+   ],
+   "bbox": {
+    "min": [
+     -0.405,
+     0.0,
+     -0.405
+    ],
+    "max": [
+     0.405,
+     0.08,
+     0.405
+    ]
+   },
+   "tris": 764,
+   "collider": "none",
+   "bytes": 19684
+  }
+ ]
+}
