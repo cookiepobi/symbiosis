@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css?v=fixed-pen-button">
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","./js/cat3d.js":"./js/cat3d-glb.js","./js/ui.js":"./js/ui.js?v=capacity-2","./js/world.js":"./js/world.js?v=capacity-2","./js/game.js":"./js/game.js?v=capacity-2","./js/params.js":"./js/params.js?v=capacity-2","./js/next-step.js":"./js/next-step.js?v=capacity-2"}}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","./js/cat3d.js":"./js/cat3d-glb.js?v=coat1","./js/ui.js":"./js/ui.js?v=capacity-2","./js/world.js":"./js/world.js?v=capacity-2","./js/game.js":"./js/game.js?v=capacity-2","./js/params.js":"./js/params.js?v=capacity-2","./js/next-step.js":"./js/next-step.js?v=capacity-2"}}</script>
 <style>
   #glbTest{position:fixed;left:12px;bottom:12px;z-index:50;background:#fffaf0ee;border:2px solid #e8d6b8;border-radius:14px;
     padding:10px 12px;font:13px/1.45 system-ui,sans-serif;color:#5a4632;min-width:230px;box-shadow:0 4px 14px #0002}
@@ -59,7 +59,7 @@
   <small>주소 옵션: ?glb=파일.glb · &amp;mat=pbr(원래 재질 비교) · &amp;coat=0(흰 고양이) · &amp;bodyrand=0</small>
 </div>
 <script type="module">
-  import { glbSettings, setAllBody, resetRandomBody, setWalkSpeed, liveGlbCats } from './js/cat3d-glb.js';
+  import { glbSettings, setAllBody, resetRandomBody, setWalkSpeed, liveGlbCats } from './js/cat3d.js'; // importmap이 cat3d-glb.js로 연결
   const $ = id => document.getElementById(id);
   const status = $('glbStatus');
   if (glbSettings.loaded) {

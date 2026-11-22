@@ -13,8 +13,8 @@
 export * from './cat3d.js?orig';
 import * as THREE from 'three';
 import { buildCat as buildProcedural, disposeCat as disposeProcedural, toon } from './cat3d.js?orig';
-import { loadCatGlb, buildGlbCat, disposeGlbCat } from './glb-cat.js';
-import { applyCoat } from './glb-coat.js';
+import { loadCatGlb, buildGlbCat, disposeGlbCat } from './glb-cat.js?v=coat1';
+import { applyCoat } from './glb-coat.js?v=coat1';
 
 const params = new URLSearchParams(location.search);
 const GLB_URL = params.get('glb') || './cat_deploy.glb';
