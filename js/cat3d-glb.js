@@ -3,7 +3,7 @@
 // 원래 게임(index.html)에는 영향 없음 — 이 파일은 cat-game-glb.html의 importmap에서만 연결됨.
 //
 // 주소 옵션: cat-game-glb.html?glb=./다른파일.glb&body=0.5&walk=1.2&mat=pbr&bodyrand=0
-//   glb       불러올 GLB (기본 ./cat_deploy.glb)
+//   glb       불러올 GLB (기본 ./newcat2_walkfix.glb, 예전 모델은 ?glb=./cat_deploy.glb)
 //   body      체형 시작값 -0.70(홀쭉) ~ 0 ~ 0.75(뚱냥)
 //   bodyrand  1이면 고양이마다 체형을 다르게 (기본 1, 0이면 모두 같은 체형)
 //   walk      걷기 애니메이션 재생 속도 배율 (기본 1.3)
@@ -13,11 +13,11 @@
 export * from './cat3d.js?orig';
 import * as THREE from 'three';
 import { buildCat as buildProcedural, disposeCat as disposeProcedural, toon } from './cat3d.js?orig';
-import { loadCatGlb, buildGlbCat, disposeGlbCat } from './glb-cat.js?v=coat1';
-import { applyCoat } from './glb-coat.js?v=coat1';
+import { loadCatGlb, buildGlbCat, disposeGlbCat } from './glb-cat.js?v=n2';
+import { applyCoat } from './glb-coat.js?v=n2';
 
 const params = new URLSearchParams(location.search);
-const GLB_URL = params.get('glb') || './cat_deploy.glb';
+const GLB_URL = params.get('glb') || './newcat2_walkfix.glb';
 // 웹 게임 단위: 1 world unit = 0.7 m (cat-scale-preview.js), 고양이 holder는 CAT_SCALE 0.7 (world.js)
 const METRES_PER_UNIT = 0.7;
 const CAT_SCALE = 0.7;
@@ -36,7 +36,10 @@ function toTeamMaterial(m, mesh, cat) {
     alphaTest: m.alphaTest,
     side: m.side,
   };
-  if (/eye/i.test(m.name)) return new THREE.MeshBasicMaterial({ ...common, color: 0xffffff });
+  // 얼굴 데칼(eye)·외곽선(outline)·수염(whisker): 조명 없이 원래 색 그대로
+  if (/eye|outline|whisker/i.test(m.name)) {
+    return new THREE.MeshBasicMaterial({ ...common, color: m.map ? 0xffffff : m.color.getHex() });
+  }
   const t = toon(m.map ? 0xffffff : m.color.getHex(), common);
   if (USE_COAT && mesh?.isSkinnedMesh && /coat/i.test(m.name)) applyCoat(THREE, t, mesh, cat);
   return t;

@@ -6,7 +6,7 @@
 //   · 기본색 / 토티(오렌지 패치) / 고등어·클래식 태비 / 흰 반점(bicolor·high) / 포인트(point·sepia·mink)
 //   · 실버·농도는 resolveAppearance가 이미 색에 반영 / 스핑크스(피부색) / 판타지(그라데이션 + 반짝이)
 // 기본 자세 위치를 쓰므로 걷기·식빵자세·체형 셰이프 키로 모양이 바뀌어도 무늬가 털에 붙어서 같이 움직인다.
-// 원래 coat 텍스처에서 기본 크림색과 다른 부분(귀 안쪽 분홍 등)은 그대로 살린다.
+// 원래 coat 텍스처의 얼굴 그림(검은 눈·입, 분홍 코·볼터치·귀 안쪽)은 그대로 살린다.
 import { resolveAppearance, FANTASY_PALETTE } from './appearance.js';
 
 // 뼈 이름 → 부위 (Meshy/블렌더 리그 이름 기준)
@@ -21,6 +21,11 @@ const REGION_RULES = [
 export function ensureRegionAttribute(THREE, mesh) {
   const g = mesh.geometry;
   if (!g || g.attributes.catRegion) return;
+  // 무늬 좌표 기준점: 모델마다 바닥 높이·앞뒤 중앙이 달라도 cat_deploy.glb 기준 좌표로 맞춘다
+  // (cat_deploy.glb: 바닥 y≈-0.475, 앞뒤 중앙 z≈-0.0105 / newcat2: 바닥 y≈0, 중앙 z≈0)
+  g.computeBoundingBox();
+  const bb = g.boundingBox;
+  g.userData.catOrigin = new THREE.Vector3(0, bb.min.y + 0.475, (bb.min.z + bb.max.z) / 2 + 0.0105);
   const si = g.attributes.skinIndex, sw = g.attributes.skinWeight;
   const n = g.attributes.position.count;
   const out = new Float32Array(n * 4);
@@ -83,13 +88,14 @@ export function coatUniforms(THREE, cat) {
 
 const VERT_HEAD = /* glsl */`
 attribute vec4 catRegion;
+uniform vec3 uOrigin;
 varying vec3 vCatRest;
 varying vec3 vCatRestN;
 varying vec4 vCatReg;
 `;
 const VERT_BODY = /* glsl */`
 #include <begin_vertex>
-vCatRest = position;
+vCatRest = position - uOrigin;
 vCatRestN = normal;
 vCatReg = catRegion;
 `;
@@ -210,7 +216,9 @@ const FRAG_MAP = /* glsl */`
 #else
   vec4 catTexel = vec4( uCream, 1.0 );
 #endif
-  float catKeep = smoothstep( 0.06, 0.22, distance( catTexel.rgb, uCream ) ); // 귀 안쪽 분홍 등 원래 그림은 살림
+  // 얼굴 그림(검은 눈·입, 분홍 코·볼터치·귀 안쪽)만 원래 텍스처를 살리고 나머지 털은 유전 색으로
+  float catLum = dot( catTexel.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+  float catKeep = max( smoothstep( 0.16, 0.06, catLum ), smoothstep( 0.08, 0.16, catTexel.r - catTexel.g ) );
   diffuseColor.rgb *= mix( catCoat(), catTexel.rgb, catKeep );
 `;
 
@@ -218,13 +226,14 @@ const FRAG_MAP = /* glsl */`
 export function applyCoat(THREE, material, mesh, cat) {
   ensureRegionAttribute(THREE, mesh);
   const { uniforms, app } = coatUniforms(THREE, cat);
+  uniforms.uOrigin = { value: (mesh.geometry.userData.catOrigin || new THREE.Vector3()).clone() };
   material.userData.coat = { uniforms, app };
   material.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = VERT_HEAD + shader.vertexShader.replace('#include <begin_vertex>', VERT_BODY);
     shader.fragmentShader = FRAG_HEAD + shader.fragmentShader.replace('#include <map_fragment>', FRAG_MAP);
   };
-  material.customProgramCacheKey = () => 'cat-coat-v1';
+  material.customProgramCacheKey = () => 'cat-coat-v2';
   material.needsUpdate = true;
   return material;
 }
