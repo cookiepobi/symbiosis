@@ -128,6 +128,7 @@ jobs:
           ~/blender/blender -b --factory-startup -P tools/blender/convert_assets.py -- \
             --src drive_src --out godot/assets/models \
             --rules godot/assets/asset_rules.json --report asset-report.md \
+            --animation-sample-multiplier 4 \
             ${{ inputs.force && '--force' || '' }}
           cat asset-report.md >> "$GITHUB_STEP_SUMMARY"
 

@@ -19,10 +19,12 @@ import sys
 import bpy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "nyang_asset_tools"))
 sys.path.insert(0, os.path.join(HERE, "..", "sync"))
 import nyang_checks  # noqa: E402
 from asset_files import SOURCE_EXTS, file_sha256, iter_sources, slugify  # noqa: E402
+from animation_sampling import temporary_sampling_grid  # noqa: E402
 
 
 def parse_args():
@@ -33,6 +35,8 @@ def parse_args():
     p.add_argument("--rules", required=True)
     p.add_argument("--report", default="asset-report.md")
     p.add_argument("--force", action="store_true")
+    p.add_argument("--animation-sample-multiplier", type=int, choices=(1, 2, 4), default=1,
+                   help="Export-only frame/FPS multiplier for baked subframe keys (4 = quarter frames)")
     return p.parse_args(argv)
 
 
@@ -60,7 +64,7 @@ def remove_references():
         bpy.data.collections.remove(coll)
 
 
-def export_glb(path, has_shape_keys):
+def export_glb(path, has_shape_keys, animation_sample_multiplier=1):
     """Blender 버전마다 옵션 이름이 조금씩 달라서, 존재하는 옵션만 골라 넘긴다."""
     wanted = {
         "filepath": path,
@@ -70,6 +74,12 @@ def export_glb(path, has_shape_keys):
         "export_yup": True,
         "export_apply": not has_shape_keys,  # Shape key가 있으면 모디파이어 적용 불가
         "export_animations": True,
+        "export_animation_mode": "ACTIONS",
+        "export_force_sampling": True,
+        "export_frame_step": 1,
+        "export_optimize_animation_size": False,
+        "export_def_bones": True,
+        "export_anim_slide_to_zero": True,
         "export_skins": True,
         "export_morph": True,
         "export_materials": "EXPORT",
@@ -79,7 +89,9 @@ def export_glb(path, has_shape_keys):
         "export_extras": True,
     }
     props = bpy.ops.export_scene.gltf.get_rna_type().properties.keys()
-    bpy.ops.export_scene.gltf(**{k: v for k, v in wanted.items() if k in props})
+    with temporary_sampling_grid(bpy.context.scene, bpy.data.actions,
+                                 animation_sample_multiplier):
+        bpy.ops.export_scene.gltf(**{k: v for k, v in wanted.items() if k in props})
 
 
 def fmt_dims(dims):
@@ -97,6 +109,9 @@ def main():
             manifest = json.load(f)
 
     rows = []
+    export_profile = {"version": 2, "animation_sample_multiplier": args.animation_sample_multiplier,
+                      "animation_mode": "ACTIONS", "deform_only": True,
+                      "force_sampling": True, "optimize_animation_size": False}
     for rel, category, src_path in iter_sources(args.src):
         digest = file_sha256(src_path)
         name = slugify(os.path.splitext(os.path.basename(rel))[0])
@@ -104,10 +119,12 @@ def main():
         out_path = os.path.join(args.out, out_rel)
         prev = manifest.get(rel)
         if (not args.force and prev and prev.get("sha256") == digest
+                and prev.get("export_profile") == export_profile
                 and (prev.get("status") != "converted" or os.path.exists(out_path))):
             continue
 
         entry = {"source": rel, "sha256": digest, "category": category, "output": None,
+                 "export_profile": export_profile,
                  "checked_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")}
         try:
             load_source(os.path.abspath(src_path))
@@ -119,7 +136,8 @@ def main():
                 entry["status"] = "rejected"
             else:
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
-                export_glb(os.path.abspath(out_path), bool(result["shape_keys"]))
+                export_glb(os.path.abspath(out_path), bool(result["shape_keys"]),
+                           args.animation_sample_multiplier)
                 entry["status"] = "converted"
                 entry["output"] = out_rel
         except Exception as exc:  # 한 파일이 깨져도 나머지는 계속 처리
