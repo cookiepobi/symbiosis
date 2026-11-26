@@ -1,13 +1,15 @@
 import { G, load, newGame, tick, save, loadIssue } from './game.js';
 import { showRecovery } from './recovery.js';
 import { preloadModelCat } from './model-cat.js';
+import { preloadHumans } from './model-human.js';
 import { loadMapLayout, setMapLayout, getMapLayout, placeAssetIds } from './map-layout.js';
 import { preloadAssets } from './props.js';
 
 // Blender 고양이 모델을 먼저 불러옴(실패하면 기본 코드 고양이). ?cat=classic 이면 기존 고양이
 const query = new URLSearchParams(location.search);
 const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-await Promise.all([query.get('cat') !== 'classic' ? preloadModelCat() : null, loadMapLayout()]);
+// 사람 캐릭터(집사·이웃)도 함께. ?human=classic 이면 예전 코드 아바타
+await Promise.all([query.get('cat') !== 'classic' ? preloadModelCat() : null, query.get('human') !== 'classic' ? preloadHumans() : null, loadMapLayout()]);
 // 편집 모드: 저장 전 편집본(장소 모양을 바꾸면 새로고침하며 이어감)이 있으면 그걸로
 const editing = local && query.get('edit') === '1';
 if (editing) { try { const draft = JSON.parse(sessionStorage.getItem('mapLayoutDraft') || 'null'); if (draft?.layout) setMapLayout(draft.layout); } catch {} }

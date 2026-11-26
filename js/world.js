@@ -10,6 +10,7 @@ import {findPath,segmentClear} from './navigation.js';
 import { getMapLayout, PEN_MAX, GARDEN, isGarden, MAP_BOUNDS } from './map-layout.js';
 import { makeTerrain } from './terrain.js';
 import { loadCatalog, makeProp, propCollider, propNow, catalogEntry, assetScale } from './props.js';
+import { buildHuman } from './model-human.js';
 
 // 에셋 복제본은 지오메트리·재질을 공유하므로, 우리를 다시 만들 때 dispose 전에 떼어 냄
 function detachShared(root) {
@@ -19,9 +20,30 @@ function detachShared(root) {
 }
 
 const CAT_SCALE = 0.7;
+// 집사 이동 속도(게임 단위/초). 예전 6.2 → Blender 캐릭터 걷기 동작과 어울리게 줄임
+const PLAYER_SPEED = 3.8;
 const LAWN = 0;   // 둥근 마당 잔디 바닥 두께 (0 = 바닥 없음, 마을 잔디 그대로)
 const BOUNDS = MAP_BOUNDS;
 
+// 바닥(잔디·흙길·광장) 텍스처 색 조절: 채도를 조금 낮추고 살짝 밝게 (1 = 원본 그대로)
+const GROUND_SATURATION = 0.75, GROUND_BRIGHTNESS = 1.05;
+function softenTexture(t) {
+  if (GROUND_SATURATION === 1 && GROUND_BRIGHTNESS === 1) return t;
+  const img = t.image, w = img?.width, h = img?.height;
+  if (!w || !h) return t;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, w, h), p = d.data;
+  for (let i = 0; i < p.length; i += 4) {
+    const r = p[i], gg = p[i + 1], b = p[i + 2], y = 0.299 * r + 0.587 * gg + 0.114 * b;
+    p[i] = (y + (r - y) * GROUND_SATURATION) * GROUND_BRIGHTNESS;
+    p[i + 1] = (y + (gg - y) * GROUND_SATURATION) * GROUND_BRIGHTNESS;
+    p[i + 2] = (y + (b - y) * GROUND_SATURATION) * GROUND_BRIGHTNESS;
+  }
+  g.putImageData(d, 0, 0);
+  const out = new THREE.CanvasTexture(c); t.dispose();
+  return out;
+}
 function canvasTex(w, h, draw, repeat) {
   const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
@@ -60,7 +82,8 @@ export class World {
     // 맵 배치(assets/map-layout.json). placeObjects: 편집 모드에서 장소를 옮길 때 함께 움직일 오브젝트
     this.layout = getMapLayout(); this.terrain = makeTerrain(this.layout.terrain); this.T = this.terrain.height; this.placeObjects = {}; this.pathMeshes = []; this.propObjects = []; this.propColliders = [];
     this.buildGround(); this.buildDecor(); this.buildBuildings(); this.buildPens();
-    this.player = this.makeAvatar({ hair: 0xf1e3c8, shirt: 0xffffff, stripe: 0x3a4a63, pants: 0x4a5f8a, skin: 0xf3c9a6 });
+    // 집사: Blender 캐릭터(main_human.glb)가 있으면 그걸로, 없으면 코드 아바타
+    this.player = buildHuman('main') ?? this.makeAvatar({ hair: 0xf1e3c8, shirt: 0xffffff, stripe: 0x3a4a63, pants: 0x4a5f8a, skin: 0xf3c9a6 });
     const start = this.layout.places.player;
     this.player.position.set(start.x, this.T(start.x, start.z), start.z); this.scene.add(this.player);
     this.placeObjects.player = [this.player];
@@ -109,7 +132,8 @@ export class World {
   /* assets/textures/ 텍스처를 불러와 반복 설정 (불러오기 실패해도 게임은 계속, 단색으로 남음) */
   groundTex(name, rx, ry, apply) {
     this.texLoader ??= new THREE.TextureLoader();
-    this.texLoader.load(new URL(`../assets/textures/${name}`, import.meta.url).href, t => {
+    this.texLoader.load(new URL(`../assets/textures/${name}`, import.meta.url).href, t0 => {
+      const t = softenTexture(t0);
       t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 4;
       apply(t);
     }, undefined, e => console.warn('바닥 텍스처를 불러오지 못했어요', name, e));
@@ -646,13 +670,16 @@ export class World {
     const shirts = [0xf6a98d, 0x8cc7ee, 0xf3d36a, 0xe58fb5, 0xa6d9a0];
     this.penHouse ??= {};
     this.placeObjects.neighbors = [];
+    // 이웃 앞치마 색: 집사(1번)와 겹치지 않게 2~8번 중에서 서로 다르게 무작위로
+    const aprons = [2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5);
     npcs.forEach((n, i) => {
       const slot = this.npcSlots?.[i] ?? { x: this.npcPositions[i], z: this.npcRowZ ?? -14 }, cx = slot.x, rz = slot.z;
       if (slot.house) this.penHouse['npc:' + n.id] = slot.house;
       this.penHouseRy ??= {}; if (slot.ry) this.penHouseRy['npc:' + n.id] = slot.ry;
       this.penShape ??= {}; if (slot.poly) this.penShape['npc:' + n.id] = { poly: slot.poly, gate: slot.gate, hx: slot.hx, hz: slot.hz, hry: slot.ry };
       this.buildPen('npc:' + n.id, cx, rz, 9, 7, `${n.icon} ${n.name}의 우리`, 0xf0e0c0);
-      const av = this.makeAvatar({ hair: hairs[i % 5], shirt: shirts[i % 5], stripe: shirts[i % 5], pants: 0x6b5a4a, skin: 0xf3c9a6 });
+      // 이웃: Blender 캐릭터(neighbor_npc.glb)가 있으면 그걸로, 없으면 코드 아바타
+      const av = buildHuman('npc', { apron: aprons[i % aprons.length] }) ?? this.makeAvatar({ hair: hairs[i % 5], shirt: shirts[i % 5], stripe: shirts[i % 5], pants: 0x6b5a4a, skin: 0xf3c9a6 });
       const gardenRow = isGarden(this.layout.places.neighbors), front = rz + (this.layout.places.neighbors.gd ?? 12) / 2;
       // 둥근 마당이면 이웃은 마당 문 옆(앞쪽)에 서 있음
       const shapedPen = this.pens['npc:' + n.id]?.poly ? this.pens['npc:' + n.id] : null;
@@ -827,7 +854,7 @@ export class World {
     const rect=this.canvas.getBoundingClientRect();
     this.hooks.onPenAnchor?.({x:rect.left+(marker.x+1)*rect.width/2,y:rect.top+(1-marker.y)*rect.height/2,visible:Math.abs(marker.x)<1&&Math.abs(marker.y)<1&&marker.z>-1&&marker.z<1});
     this.updateCats(dt, t);
-    for (const av of this.npcAvatars) { av.userData.inner.position.y = Math.sin(t * 2 + av.position.x) * 0.03; av.userData.head.rotation.z = Math.sin(t * 1.3 + av.position.x) * 0.06; }
+    for (const av of this.npcAvatars) { av.userData.inner.position.y = Math.sin(t * 2 + av.position.x) * (av.userData.human ? 0.01 : 0.03); av.userData.head.rotation.z = Math.sin(t * 1.3 + av.position.x) * 0.06; }
     for (const p of this.pulsers) { const s = 1 + Math.sin(t * 3) * 0.12; p.scale.set(s, s, 1); }
     if (!this.editor) this.checkZones(); else this.editor.frame?.(dt, t);
     this.renderer.render(this.scene, this.camera);
@@ -849,13 +876,20 @@ export class World {
     if (moving) {
       this.stopWatching();
       const l = Math.hypot(dx, dz); if (l > 1) { dx /= l; dz /= l; }
-      const sp = followsRoute&&this.target?Math.min(6.2*dt,Math.hypot(this.target.x-p.position.x,this.target.z-p.position.z)):6.2*dt;
+      const sp = followsRoute&&this.target?Math.min(PLAYER_SPEED*dt,Math.hypot(this.target.x-p.position.x,this.target.z-p.position.z)):PLAYER_SPEED*dt;
       this.tryMove(p.position, dx * sp, 0); this.tryMove(p.position, 0, dz * sp);
       p.position.y = this.T(p.position.x, p.position.z);   // 계단·층 높이 따라가기
       const ang = Math.atan2(dx, dz);
       let da = ang - p.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); p.rotation.y += da * Math.min(1, dt * 12);
     }
-    const u = p.userData, sw = moving ? Math.sin(t * 12) * 0.7 : 0;
+    const u = p.userData;
+    if (u.human) {
+      // Blender 캐릭터: 걷기 동작은 모델 애니메이션이 담당 (팔·다리 흔들기·통통 튀기 포함)
+      u.human.update(dt, !!moving);
+      u.inner.position.y = moving ? 0 : Math.sin(t * 2) * 0.01;
+      return;
+    }
+    const sw = moving ? Math.sin(t * 12) * 0.7 : 0;
     u.legs[0].rotation.x = sw; u.legs[1].rotation.x = -sw; u.arms[0].rotation.x = -sw * 0.8; u.arms[1].rotation.x = sw * 0.8;
     u.inner.position.y = moving ? Math.abs(Math.sin(t * 12)) * 0.08 : Math.sin(t * 2) * 0.015;
   }
