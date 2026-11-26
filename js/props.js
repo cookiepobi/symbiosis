@@ -15,8 +15,10 @@ export const CATEGORY_SCALE = { furniture: 0.6, prop: 0.6, nature: 0.85 };
 /* 에셋 1m → 게임 단위 (분류 배율 포함) */
 export const assetScale = id => WORLD_SCALE * (CATEGORY_SCALE[catalogEntry(id)?.category] ?? 1);
 // Blender 미리보기(밝은 스튜디오 조명 + AgX)와 비슷하게: 색을 흰색 쪽으로 조금 옮기고 자기 빛을 약간 더함
-const PASTEL = 0.38, COLOR_LIFT = 0.12;
+const PASTEL = 0, COLOR_LIFT = 0;   // 2026-11-26 사용자 요청: 색·채도 보정 없이 원래 색 그대로
 const WHITE = new THREE.Color(0xffffff);
+// 텍스처 에셋 보정: 채도 낮춤 · 흰색 쪽 이동 · 자기 빛
+const TEX_DESAT = 0, TEX_PASTEL = 0, TEX_LIFT = 0;   // 텍스처도 원래 색 그대로
 const templates = new Map();   // id -> Promise<Object3D>
 const resolved = new Map();    // id -> Object3D (불러오기가 끝난 것: 월드를 만들 때 바로 복제)
 
@@ -40,6 +42,17 @@ function toonify(root) {
       const t = toon(base.getHex(), { map: m.map ?? null, transparent: m.transparent, alphaTest: m.alphaTest, side: m.side });
       if (t.map) t.map.colorSpace = THREE.SRGBColorSpace;
       t.emissive = t.color.clone().multiplyScalar(COLOR_LIFT); if (t.map) t.emissiveMap = t.map;
+      // 텍스처(Meshy 등)도 단색 에셋처럼 파스텔 쪽으로: 텍스처 색을 흰색 쪽으로 조금 옮기고 채도를 살짝 낮춤
+      if (t.map && (TEX_DESAT || TEX_PASTEL || TEX_LIFT)) {
+        t.emissive.setScalar(TEX_LIFT);
+        t.onBeforeCompile = sh => {
+          sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+            float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(lum), ${TEX_DESAT.toFixed(2)});
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0), ${TEX_PASTEL.toFixed(2)});`);
+        };
+        t.customProgramCacheKey = () => 'prop-tex-pastel';
+      }
       t.vertexColors = !!o.geometry.attributes.color;
       return t;
     };
@@ -98,6 +111,8 @@ export function propCollider(item, forceSolid = false) {
     const rx = (x * c + z * sn) * s, rz = (-x * sn + z * c) * s;
     x0 = Math.min(x0, rx); x1 = Math.max(x1, rx); z0 = Math.min(z0, rz); z1 = Math.max(z1, rz);
   }
+  const k = entry.collider_scale ?? 1;   // 나무+화단처럼 위쪽만 넓은 에셋은 바닥(화단) 크기만 막음
+  if (k !== 1) { const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2; x0 = mx + (x0 - mx) * k; x1 = mx + (x1 - mx) * k; z0 = mz + (z0 - mz) * k; z1 = mz + (z1 - mz) * k; }
   return [item.x + x0, item.x + x1, item.z + z0, item.z + z1];
 }
 

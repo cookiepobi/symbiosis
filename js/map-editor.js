@@ -2,12 +2,12 @@
 // 조작: 에셋 고르기 → 땅 클릭으로 놓기 · 끌어서 옮기기 · Q/E 회전 · -/= 크기 · Delete 삭제 · Ctrl+D 복제 · Ctrl+Z 되돌리기
 //       빈 땅 드래그/WASD로 화면 이동 · 휠로 확대/축소 · Ctrl+S 저장
 import * as THREE from 'three';
-import { getMapLayout, normalizeLayout, PLACE_IDS, PLACE_LABELS, PEN_MAX, PLACE_LOOKS, LOOK_LABELS, GARDEN, isGarden } from './map-layout.js';
+import { getMapLayout, normalizeLayout, PLACE_IDS, PLACE_LABELS, PEN_MAX, PLACE_LOOKS, LOOK_LABELS, GARDEN, isGarden, MAP_BOUNDS } from './map-layout.js';
 const DRAFT_KEY = 'mapLayoutDraft';
 import { loadCatalog, thumbUrl, catalogEntry, makeProp, propCollider, assetScale, renderThumb } from './props.js';
 
 const STEP_ROT = Math.PI / 12;   // 15도
-const BOUNDS = { minX: -36, maxX: 36, minZ: -26, maxZ: 22 };
+const BOUNDS = MAP_BOUNDS;
 const r2 = v => Math.round(v * 100) / 100;
 const clampX = x => Math.min(BOUNDS.maxX, Math.max(BOUNDS.minX, x));
 const clampZ = z => Math.min(BOUNDS.maxZ, Math.max(BOUNDS.minZ, z));
@@ -88,7 +88,7 @@ class MapEditor {
   applyPropTransform(i) {
     const item = this.layout.props[i], obj = this.w.propObjects.find(o => o.userData.propIndex === i);
     if (!item || !obj) return;
-    obj.position.set(item.x, this.w.groundY(item.x, item.z), item.z); obj.rotation.y = item.ry; obj.scale.setScalar(item.s * assetScale(item.asset));
+    obj.position.set(item.x, this.w.propY(item), item.z); obj.rotation.y = item.ry; obj.scale.setScalar(item.s * assetScale(item.asset));
   }
   applyAll() { this.applyPlaces(); this.applyPaths(); this.applyProps(); }
 
@@ -148,6 +148,9 @@ class MapEditor {
     const r = this.w.canvas.getBoundingClientRect();
     this.ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     this.ray.setFromCamera(this.ndc, this.w.camera);
+    // 지형(층 높이)이 있으면 실제 바닥 면에 맞춤
+    const hit = this.ray.intersectObject(this.w.ground, false)[0];
+    if (hit) return hit.point.clone();
     const p = new THREE.Vector3();
     return this.ray.ray.intersectPlane(this.plane, p) ? p : null;
   }
@@ -193,7 +196,7 @@ class MapEditor {
       }
       this.w.canvas.setPointerCapture(e.pointerId);
     } else if (type === 'move') {
-      if (this.placing) { const g = this.groundAt(e); if (g && this.ghost) { this.ghost.visible = true; this.ghost.position.set(g.x, this.w.groundY(g.x, g.z), g.z); } return; }
+      if (this.placing) { const g = this.groundAt(e); if (g && this.ghost) { this.ghost.visible = true; this.ghost.position.set(g.x, this.w.propY({ asset: this.placing, x: g.x, z: g.z }), g.z); } return; }
       if (this.resize && this.sel?.kind === 'prop') {
         const item = this.layout.props[this.sel.i], r = this.resize;
         const f = Math.hypot(e.clientX - r.cx, e.clientY - r.cy) / r.d0, step = e.shiftKey ? 0.5 : 0.05;

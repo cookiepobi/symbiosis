@@ -20,6 +20,11 @@ NAMES_KO = {
     'snow_wood_bench': '눈 나무 벤치', 'winter_bronze_lantern': '겨울 청동 등', 'cream_cat_round_plinth': '크림 고양이 동상',
     'cream_cat_statue': '크림 고양이 동상', 'gift_green_cream_bow': '초록 선물상자', 'gift_red_small_bow': '빨강 작은 선물',
     'gift_red_tall_bow': '빨강 큰 선물', 'santa_scarf_snowman': '산타 목도리 눈사람',
+    # 새 마을(키아트 v2)
+    'red_hip_cottage': '빨간 기와 오두막', 'red_timber_cottage': '빨간 목조 오두막', 'green_hip_cottage': '초록 기와 오두막',
+    'green_timber_cottage': '초록 목조 오두막', 'book_library_hut': '책 도서관', 'village_notice_board': '마을 게시판',
+    'cat_shelter_pavilion': '고양이 쉼터 정자', 'plaza_great_tree': '광장 큰 나무', 'wood_picket_fence': '나무 울타리',
+    'apple_tree': '사과나무', 'fir_tree': '전나무', 'wooden_windmill': '나무 풍차',
 }
 
 def ko_name(aid):
@@ -43,7 +48,7 @@ def collider_kind(cat, aid, size):
     return 'solid'
 
 def guess_category(aid):
-    if 'house' in aid or 'shop' in aid or 'library' in aid:
+    if any(k in aid for k in ('house', 'shop', 'library', 'cottage', 'hut', 'pavilion', 'windmill', 'notice_board')):
         return 'building'
     if any(k in aid for k in ('fence', 'shelter', 'bench', 'lantern', 'lamp')):
         return 'furniture'
@@ -51,13 +56,21 @@ def guess_category(aid):
         return 'nature'
     return 'prop'
 
+# 새 마을 규격표(분류·충돌·이름)가 있으면 그걸 우선
+_spec_path = os.path.join(HERE, 'asset_specs.json')
+SPECS = {k: v for k, v in json.load(open(_spec_path, encoding='utf-8')).items() if not k.startswith('_')} if os.path.exists(_spec_path) else {}
+for _k, _v in SPECS.items(): NAMES_KO.setdefault(_k, _v['name'])
+
 jobs = []   # (category, folder, filename)
 for cat in CATEGORIES:
     folder = os.path.join(SRC, cat)
     if os.path.isdir(folder):
         jobs += [(cat, folder, fn) for fn in sorted(os.listdir(folder)) if fn.endswith('.blend')]
-jobs += [(guess_category(fn[:-6]), SRC, fn) for fn in sorted(os.listdir(SRC)) if fn.endswith('.blend')]
+jobs += [(SPECS.get(fn[:-6], {}).get('category') or guess_category(fn[:-6]), SRC, fn) for fn in sorted(os.listdir(SRC)) if fn.endswith('.blend')]
 
+# 기존 목록은 유지하고, 이번에 변환한 에셋만 추가·갱신 (맵에 놓인 예전 에셋이 사라지지 않게)
+cat_path = os.path.join(OUT, 'catalog.json')
+old = json.load(open(cat_path, encoding='utf-8'))['assets'] if os.path.exists(cat_path) else []
 catalog = []
 if True:
     for cat, folder, fn in jobs:
@@ -79,7 +92,8 @@ if True:
             print('SKIP (no mesh)', fn); continue
         path = os.path.join(OUT, aid + '.glb')
         bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_apply=True,
-                                  export_yup=True, export_materials='EXPORT', export_cameras=False, export_lights=False)
+                                  export_yup=True, export_materials='EXPORT', export_cameras=False, export_lights=False,
+                                  export_image_format='JPEG', export_jpeg_quality=88)   # 투명 없는 색 텍스처: JPEG로 용량 절감
         size = [round(mx.x - mn.x, 3), round(mx.y - mn.y, 3), round(mx.z - mn.z, 3)]
         # glTF 좌표(y-up, Blender -Y 정면 → +Z)로 바운딩 박스 기록
         bbox = {'min': [round(mn.x, 3), round(mn.z, 3), round(-mx.y, 3)], 'max': [round(mx.x, 3), round(mx.z, 3), round(-mn.y, 3)]}
@@ -95,9 +109,12 @@ if True:
                 im.filepath_raw = os.path.join(OUT, thumb); im.file_format = 'PNG'; im.save()
         catalog.append({'id': aid, 'name': ko_name(aid), 'category': cat,
                         'file': aid + '.glb', 'thumb': thumb, 'size': size, 'bbox': bbox, 'tris': tris,
-                        'collider': collider_kind(cat, aid, size), 'bytes': os.path.getsize(path)})
+                        'collider': SPECS.get(aid, {}).get('collider') or collider_kind(cat, aid, size), **({'collider_scale': SPECS[aid]['collider_scale']} if 'collider_scale' in SPECS.get(aid, {}) else {}), 'bytes': os.path.getsize(path)})
         print('OK', cat, aid, size, tris, os.path.getsize(path), flush=True)
 
-with open(os.path.join(OUT, 'catalog.json'), 'w', encoding='utf-8') as f:
-    json.dump({'version': 1, 'assets': catalog}, f, ensure_ascii=False, indent=1)
+new_ids = {a['id'] for a in catalog}
+merged = [a for a in old if a['id'] not in new_ids] + catalog
+with open(cat_path, 'w', encoding='utf-8') as f:
+    json.dump({'version': 1, 'assets': merged}, f, ensure_ascii=False, indent=1)
+print('CATALOG total', len(merged), 'new/updated', len(catalog))
 print('CATALOG', len(catalog))
